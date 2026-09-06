@@ -1,0 +1,72 @@
+<!--
+SPDX-FileCopyrightText: Copyright (C) Arduino s.r.l. and/or its affiliated companies
+
+SPDX-License-Identifier: MPL-2.0
+-->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AC Power Monitor</title>
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div class="viz-root">
+      <header class="header">
+        <h1>AC Power Monitor</h1>
+        <div id="status" class="status status-offline">Connecting…</div>
+      </header>
+
+      <section class="stats" aria-label="Latest readings">
+        <div class="stat-tile">
+          <div class="stat-label">Voltage (RMS)</div>
+          <div class="stat-value">
+            <span id="voltage-value">--</span><span class="stat-unit">V</span>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label">Current (RMS)</div>
+          <div class="stat-value">
+            <span id="current-value">--</span><span class="stat-unit">A</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="chart-card">
+        <div class="chart-title">Voltage (V)</div>
+        <div class="chart-wrap" id="voltage-wrap">
+          <canvas id="voltage-chart"></canvas>
+        </div>
+      </section>
+
+      <section class="chart-card">
+        <div class="chart-title">Current (A)</div>
+        <div class="chart-wrap" id="current-wrap">
+          <canvas id="current-chart"></canvas>
+        </div>
+      </section>
+
+      <details class="table-toggle">
+        <summary>Show data table</summary>
+        <div class="table-scroll">
+          <table id="data-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Voltage (V)</th>
+                <th>Current (A)</th>
+              </tr>
+            </thead>
+            <tbody id="data-table-body"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+
+    <script src="libs/socket.io.min.js"></script>
+    <script src="libs/arduino.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
