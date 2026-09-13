@@ -25,39 +25,28 @@ const int ADC_BITS = 14;
 const float ADC_MAX = (1 << ADC_BITS) - 1;
 const float VREF = 3.3;
 
+
 // Calibration factors: real_units_rms = adc_rms_volts * CALIBRATION.
 // The raw ADC-referred RMS (before calibration) is printed over Serial every
 // second, and also charted on its own in the web UI, so you can derive these
 // by comparing against a multimeter (for voltage) or a clamp meter (for
 // current). The two current channels are calibrated independently in case
 // the two sensor boards don't have identical scaling.
-float VOLTAGE_CALIBRATION = 100.0;  // volts per ADC-volt
+float VOLTAGE_CALIBRATION = 648.1;  // volts per ADC-volt
 float CURRENT1_CALIBRATION = 10.0;  // amps per ADC-volt (A4)
 float CURRENT2_CALIBRATION = 10.0;  // amps per ADC-volt (A3)
 
-const unsigned long SAMPLE_INTERVAL_US = 200;  // 5 kHz per channel
+const unsigned long SAMPLE_INTERVAL_US = 100;  // 10 kHz per channel
 const unsigned long SEND_INTERVAL_MS = 500;
-
-// Slow-moving average used to track each channel's DC bias, so the RMS is
-// computed on the AC component only regardless of where the sensor's
-// conditioning circuit centers its output.
-double voltageBaseline = ADC_MAX / 2.0;
-double current1Baseline = ADC_MAX / 2.0;
-double current2Baseline = ADC_MAX / 2.0;
-const double BASELINE_ALPHA = 0.0005;
-
-double voltageSumSq = 0;
-double current1SumSq = 0;
-double current2SumSq = 0;
-unsigned long sampleCount = 0;
+const unsigned long SAMPLE_COUNT = 1000;
 
 unsigned long lastSampleMicros = 0;
 unsigned long lastSendMillis = 0;
 unsigned long lastLogMillis = 0;
 
-double vMA = 0;
-double c1MA = 0;
-double c2MA = 0;
+double voltageRaw = 0;
+double current1Raw = 0;
+double current2Raw = 0;
 
 // Called from Python via Bridge.call("set_led", on) when the web UI button is pressed.
 void setLed1(bool on) {
@@ -89,42 +78,56 @@ void setup() {
   digitalWrite(RELAY2_PIN, LOW);
 }
 
+void sample(const pin_size_t APIN, int64_t* sumOfSquares) {
+    int raw = analogRead(APIN);
+    int centered = raw - (1 << (ADC_BITS-1));
+    *sumOfSquares += (int64_t)(centered * centered);  
+}
+
 void loop() {
-  unsigned long nowMicros = micros();
-  if (nowMicros - lastSampleMicros >= SAMPLE_INTERVAL_US) {
-    lastSampleMicros = nowMicros;
 
-    int vRaw = analogRead(VOLTAGE_PIN);
-    int c1Raw = analogRead(CURRENT1_PIN);
-    int c2Raw = analogRead(CURRENT2_PIN);
+  // Sample raw
+  int64_t s2Voltage = 0;
+  int64_t s2Current1 = 0;
+  int64_t s2Current2 = 0;
+  
+  for (int i = 0; i < SAMPLE_COUNT; i++) {
+    sample(VOLTAGE_PIN, &s2Voltage);
+    sample(CURRENT1_PIN, &s2Current1);
+    sample(CURRENT2_PIN, &s2Current2);
 
-    vMA = 0.2 * vMA + 0.8 * vRaw;
-    c1MA = 0.2 * c1MA + 0.8 * c1Raw;
-    c2MA = 0.2 * c2MA + 0.8 * c2Raw;
-    
-    sampleCount++;
+    delayMicroseconds(SAMPLE_INTERVAL_US);    
   }
 
+  // Calculate RMS value
+  double mean = s2Voltage / (double)SAMPLE_COUNT;
+  voltageRaw = sqrt(mean) * VREF/ADC_MAX;
+
+  mean = s2Current1 / (double)SAMPLE_COUNT;
+  current1Raw = sqrt(mean) * VREF/ADC_MAX;
+
+  mean = s2Current2 / (double)SAMPLE_COUNT;
+  current2Raw = sqrt(mean) * VREF/ADC_MAX;
+
+  // send and log
   unsigned long nowMillis = millis();
-  if (nowMillis - lastSendMillis >= SEND_INTERVAL_MS && sampleCount > 0) {
-    lastSendMillis = nowMillis;
-
-   sampleCount = 0;    
+  if (nowMillis - lastSendMillis >= SEND_INTERVAL_MS) {
+    lastSendMillis = nowMillis;    
     
-    float voltageCal = (float)(vMA * VOLTAGE_CALIBRATION);
-    float current1Cal = (float)(c1MA * CURRENT1_CALIBRATION);
-    float current2Cal = (float)(c2MA * CURRENT2_CALIBRATION);
+    float voltageCal = (float)(voltageRaw * VOLTAGE_CALIBRATION);
+    float current1Cal = (float)(current1Raw * CURRENT1_CALIBRATION);
+    float current2Cal = (float)(current2Raw * CURRENT2_CALIBRATION);
 
-    Bridge.notify("sensor_reading", vMA, voltageCal, c1MA, current1Cal, c2MA, current2Cal);
+    Bridge.notify("sensor_reading", voltageRaw, voltageCal, current1Raw, current1Cal, current2Raw, current2Cal);
 
     if (nowMillis - lastLogMillis >= 1000) {
       lastLogMillis = nowMillis;
       Serial.print("adc_rms_volts: voltage=");
-      Serial.print(vMA, 4);
+      Serial.print(voltageRaw, 4);
       Serial.print(" current1=");
-      Serial.print(c1MA, 4);
+      Serial.print(current1Raw, 4);
       Serial.print(" current2=");
-      Serial.println(c2MA, 4);
+      Serial.println(current2Raw, 4);
     }
   }
 }
