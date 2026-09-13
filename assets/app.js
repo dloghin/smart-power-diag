@@ -203,48 +203,116 @@ class LineChart {
 
 const statusEl = document.getElementById('status');
 const voltageValueEl = document.getElementById('voltage-value');
-const currentValueEl = document.getElementById('current-value');
+const current1ValueEl = document.getElementById('current1-value');
+const current2ValueEl = document.getElementById('current2-value');
 const tableBody = document.getElementById('data-table-body');
+const led1Button = document.getElementById('led1-toggle');
+const led1ToggleLabel = document.getElementById('led1-toggle-label');
+const led2Button = document.getElementById('led2-toggle');
+const led2ToggleLabel = document.getElementById('led2-toggle-label');
 
-const voltageChart = new LineChart(
-  document.getElementById('voltage-chart'),
-  document.getElementById('voltage-wrap'),
-  '--series-voltage',
-  'V'
-);
-const currentChart = new LineChart(
-  document.getElementById('current-chart'),
-  document.getElementById('current-wrap'),
-  '--series-current',
-  'A'
-);
+// Each sensor keeps its own color across its raw and calibrated chart.
+const charts = {
+  voltageRaw: new LineChart(
+    document.getElementById('voltage-raw-chart'),
+    document.getElementById('voltage-raw-wrap'),
+    '--series-voltage',
+    'V'
+  ),
+  voltageCal: new LineChart(
+    document.getElementById('voltage-cal-chart'),
+    document.getElementById('voltage-cal-wrap'),
+    '--series-voltage',
+    'V'
+  ),
+  current1Raw: new LineChart(
+    document.getElementById('current1-raw-chart'),
+    document.getElementById('current1-raw-wrap'),
+    '--series-current1',
+    'V'
+  ),
+  current1Cal: new LineChart(
+    document.getElementById('current1-cal-chart'),
+    document.getElementById('current1-cal-wrap'),
+    '--series-current1',
+    'A'
+  ),
+  current2Raw: new LineChart(
+    document.getElementById('current2-raw-chart'),
+    document.getElementById('current2-raw-wrap'),
+    '--series-current2',
+    'V'
+  ),
+  current2Cal: new LineChart(
+    document.getElementById('current2-cal-chart'),
+    document.getElementById('current2-cal-wrap'),
+    '--series-current2',
+    'A'
+  ),
+};
 
 function setStatus(online) {
   statusEl.textContent = online ? 'Live' : 'Disconnected';
   statusEl.className = `status ${online ? 'status-online' : 'status-offline'}`;
 }
 
-function applyReading(reading) {
-  voltageValueEl.textContent = reading.voltage.toFixed(1);
-  currentValueEl.textContent = reading.current.toFixed(2);
+function applyLed1State(state) {
+  const on = !!(state && state.on);
+  led1Button.setAttribute('aria-pressed', String(on));
+  led1ToggleLabel.textContent = on ? 'On' : 'Off';
+}
 
-  voltageChart.push({ t: reading.t, v: reading.voltage });
-  currentChart.push({ t: reading.t, v: reading.current });
+function applyLed2State(state) {
+  const on = !!(state && state.on);
+  led2Button.setAttribute('aria-pressed', String(on));
+  led2ToggleLabel.textContent = on ? 'On' : 'Off';
+}
 
+function toggleLed1() {
+  const nextOn = led1Button.getAttribute('aria-pressed') !== 'true';
+  ui.send_message('set_led1', { on: nextOn });
+}
+
+function toggleLed2() {
+  const nextOn = led2Button.getAttribute('aria-pressed') !== 'true';
+  ui.send_message('set_led2', { on: nextOn });
+}
+
+led1Button.addEventListener('click', toggleLed1);
+led2Button.addEventListener('click', toggleLed2);
+
+function addTableRow(reading) {
   const row = document.createElement('tr');
-  const timeCell = document.createElement('td');
-  timeCell.textContent = new Date(reading.t * 1000).toLocaleTimeString();
-  const voltageCell = document.createElement('td');
-  voltageCell.textContent = reading.voltage.toFixed(2);
-  const currentCell = document.createElement('td');
-  currentCell.textContent = reading.current.toFixed(2);
-  row.appendChild(timeCell);
-  row.appendChild(voltageCell);
-  row.appendChild(currentCell);
+  const cells = [
+    new Date(reading.t * 1000).toLocaleTimeString(),
+    reading.voltage_cal.toFixed(2),
+    reading.current1_cal.toFixed(2),
+    reading.current2_cal.toFixed(2),
+  ];
+  cells.forEach(text => {
+    const cell = document.createElement('td');
+    cell.textContent = text;
+    row.appendChild(cell);
+  });
   tableBody.insertBefore(row, tableBody.firstChild);
   while (tableBody.children.length > MAX_TABLE_ROWS) {
     tableBody.removeChild(tableBody.lastChild);
   }
+}
+
+function applyReading(reading) {
+  voltageValueEl.textContent = reading.voltage_cal.toFixed(1);
+  current1ValueEl.textContent = reading.current1_cal.toFixed(2);
+  current2ValueEl.textContent = reading.current2_cal.toFixed(2);
+
+  charts.voltageRaw.push({ t: reading.t, v: reading.voltage_raw });
+  charts.voltageCal.push({ t: reading.t, v: reading.voltage_cal });
+  charts.current1Raw.push({ t: reading.t, v: reading.current1_raw });
+  charts.current1Cal.push({ t: reading.t, v: reading.current1_cal });
+  charts.current2Raw.push({ t: reading.t, v: reading.current2_raw });
+  charts.current2Cal.push({ t: reading.t, v: reading.current2_cal });
+
+  addTableRow(reading);
 }
 
 const ui = new WebUI({
@@ -253,33 +321,28 @@ const ui = new WebUI({
   autoConnect: true,
 });
 
-ui.on_connect(() => setStatus(true));
+ui.on_connect(() => {
+  setStatus(true);
+  // Pick up the LED's current state whenever the socket (re)connects.
+  ui.send_message('get_led1');
+  ui.send_message('get_led2');
+});
 ui.on_disconnect(() => setStatus(false));
 ui.on_message('reading', applyReading);
+ui.on_message('led1', applyLed1State);
+ui.on_message('led2', applyLed2State);
 
 // Backfill chart history from the last samples the app already collected.
 fetch('/samples')
   .then(r => r.json())
   .then(list => {
     if (!Array.isArray(list)) return;
-    const points = list.map(s => ({ t: s.t, v: s.voltage }));
-    const currents = list.map(s => ({ t: s.t, v: s.current }));
-    voltageChart.setData(points);
-    currentChart.setData(currents);
-    list.slice(-MAX_TABLE_ROWS).forEach(applyReadingToTableOnly);
+    charts.voltageRaw.setData(list.map(s => ({ t: s.t, v: s.voltage_raw })));
+    charts.voltageCal.setData(list.map(s => ({ t: s.t, v: s.voltage_cal })));
+    charts.current1Raw.setData(list.map(s => ({ t: s.t, v: s.current1_raw })));
+    charts.current1Cal.setData(list.map(s => ({ t: s.t, v: s.current1_cal })));
+    charts.current2Raw.setData(list.map(s => ({ t: s.t, v: s.current2_raw })));
+    charts.current2Cal.setData(list.map(s => ({ t: s.t, v: s.current2_cal })));
+    list.slice(-MAX_TABLE_ROWS).forEach(addTableRow);
   })
   .catch(() => {});
-
-function applyReadingToTableOnly(reading) {
-  const row = document.createElement('tr');
-  const timeCell = document.createElement('td');
-  timeCell.textContent = new Date(reading.t * 1000).toLocaleTimeString();
-  const voltageCell = document.createElement('td');
-  voltageCell.textContent = reading.voltage.toFixed(2);
-  const currentCell = document.createElement('td');
-  currentCell.textContent = reading.current.toFixed(2);
-  row.appendChild(timeCell);
-  row.appendChild(voltageCell);
-  row.appendChild(currentCell);
-  tableBody.insertBefore(row, tableBody.firstChild);
-}

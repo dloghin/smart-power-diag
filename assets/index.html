@@ -21,30 +21,96 @@ SPDX-License-Identifier: MPL-2.0
 
       <section class="stats" aria-label="Latest readings">
         <div class="stat-tile">
-          <div class="stat-label">Voltage (RMS)</div>
+          <div class="stat-label"><span class="legend-dot legend-voltage"></span>Voltage (RMS)</div>
           <div class="stat-value">
             <span id="voltage-value">--</span><span class="stat-unit">V</span>
           </div>
         </div>
         <div class="stat-tile">
-          <div class="stat-label">Current (RMS)</div>
+          <div class="stat-label"><span class="legend-dot legend-current1"></span>Current 1 · A4 (RMS)</div>
           <div class="stat-value">
-            <span id="current-value">--</span><span class="stat-unit">A</span>
+            <span id="current1-value">--</span><span class="stat-unit">A</span>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label"><span class="legend-dot legend-current2"></span>Current 2 · A3 (RMS)</div>
+          <div class="stat-value">
+            <span id="current2-value">--</span><span class="stat-unit">A</span>
           </div>
         </div>
       </section>
 
-      <section class="chart-card">
-        <div class="chart-title">Voltage (V)</div>
-        <div class="chart-wrap" id="voltage-wrap">
-          <canvas id="voltage-chart"></canvas>
+      <section class="controls" aria-label="LED 1 control">
+        <div class="control-tile">
+          <div class="control-label">LED · Pin 2</div>
+          <button id="led1-toggle" class="led-button" type="button" aria-pressed="false">
+            <span class="led-dot"></span>
+            <span id="led1-toggle-label">Off</span>
+          </button>
         </div>
       </section>
 
-      <section class="chart-card">
-        <div class="chart-title">Current (A)</div>
-        <div class="chart-wrap" id="current-wrap">
-          <canvas id="current-chart"></canvas>
+      <section class="controls" aria-label="LED 2 control">
+        <div class="control-tile">
+          <div class="control-label">LED · Pin 3</div>
+          <button id="led2-toggle" class="led-button" type="button" aria-pressed="false">
+            <span class="led-dot"></span>
+            <span id="led2-toggle-label">Off</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="sensor-section">
+        <h2 class="sensor-title"><span class="legend-dot legend-voltage"></span>Voltage — A0</h2>
+        <div class="chart-pair">
+          <div class="chart-card">
+            <div class="chart-title">Raw ADC (V)</div>
+            <div class="chart-wrap" id="voltage-raw-wrap">
+              <canvas id="voltage-raw-chart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Calibrated (V)</div>
+            <div class="chart-wrap" id="voltage-cal-wrap">
+              <canvas id="voltage-cal-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sensor-section">
+        <h2 class="sensor-title"><span class="legend-dot legend-current1"></span>Current 1 — A4</h2>
+        <div class="chart-pair">
+          <div class="chart-card">
+            <div class="chart-title">Raw ADC (V)</div>
+            <div class="chart-wrap" id="current1-raw-wrap">
+              <canvas id="current1-raw-chart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Calibrated (A)</div>
+            <div class="chart-wrap" id="current1-cal-wrap">
+              <canvas id="current1-cal-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sensor-section">
+        <h2 class="sensor-title"><span class="legend-dot legend-current2"></span>Current 2 — A3</h2>
+        <div class="chart-pair">
+          <div class="chart-card">
+            <div class="chart-title">Raw ADC (V)</div>
+            <div class="chart-wrap" id="current2-raw-wrap">
+              <canvas id="current2-raw-chart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Calibrated (A)</div>
+            <div class="chart-wrap" id="current2-cal-wrap">
+              <canvas id="current2-cal-chart"></canvas>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -56,7 +122,8 @@ SPDX-License-Identifier: MPL-2.0
               <tr>
                 <th>Time</th>
                 <th>Voltage (V)</th>
-                <th>Current (A)</th>
+                <th>Current 1 (A)</th>
+                <th>Current 2 (A)</th>
               </tr>
             </thead>
             <tbody id="data-table-body"></tbody>
