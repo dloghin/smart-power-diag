@@ -42,7 +42,7 @@ SPDX-License-Identifier: MPL-2.0
 
       <section class="controls" aria-label="LED 1 control">
         <div class="control-tile">
-          <div class="control-label">LED · Pin 2</div>
+          <div class="control-label">Plug 1</div>
           <button id="led1-toggle" class="led-button" type="button" aria-pressed="false">
             <span class="led-dot"></span>
             <span id="led1-toggle-label">Off</span>
@@ -52,7 +52,7 @@ SPDX-License-Identifier: MPL-2.0
 
       <section class="controls" aria-label="LED 2 control">
         <div class="control-tile">
-          <div class="control-label">LED · Pin 3</div>
+          <div class="control-label">Plug 2</div>
           <button id="led2-toggle" class="led-button" type="button" aria-pressed="false">
             <span class="led-dot"></span>
             <span id="led2-toggle-label">Off</span>
@@ -60,10 +60,19 @@ SPDX-License-Identifier: MPL-2.0
         </div>
       </section>
 
+      <section class="controls" aria-label="Raw ADC charts visibility">
+        <div class="control-tile">
+          <div class="control-label">Raw ADC charts</div>
+          <button id="raw-charts-toggle" class="led-button" type="button" aria-pressed="true">
+            <span id="raw-charts-toggle-label">Shown</span>
+          </button>
+        </div>
+      </section>
+
       <section class="sensor-section">
         <h2 class="sensor-title"><span class="legend-dot legend-voltage"></span>Voltage — A0</h2>
         <div class="chart-pair">
-          <div class="chart-card">
+          <div class="chart-card chart-card--raw">
             <div class="chart-title">Raw ADC (V)</div>
             <div class="chart-wrap" id="voltage-raw-wrap">
               <canvas id="voltage-raw-chart"></canvas>
@@ -81,7 +90,7 @@ SPDX-License-Identifier: MPL-2.0
       <section class="sensor-section">
         <h2 class="sensor-title"><span class="legend-dot legend-current1"></span>Current 1 — A4</h2>
         <div class="chart-pair">
-          <div class="chart-card">
+          <div class="chart-card chart-card--raw">
             <div class="chart-title">Raw ADC (V)</div>
             <div class="chart-wrap" id="current1-raw-wrap">
               <canvas id="current1-raw-chart"></canvas>
@@ -99,7 +108,7 @@ SPDX-License-Identifier: MPL-2.0
       <section class="sensor-section">
         <h2 class="sensor-title"><span class="legend-dot legend-current2"></span>Current 2 — A3</h2>
         <div class="chart-pair">
-          <div class="chart-card">
+          <div class="chart-card chart-card--raw">
             <div class="chart-title">Raw ADC (V)</div>
             <div class="chart-wrap" id="current2-raw-wrap">
               <canvas id="current2-raw-chart"></canvas>

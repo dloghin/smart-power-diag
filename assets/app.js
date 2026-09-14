@@ -6,11 +6,12 @@ const MAX_POINTS = 200;
 const MAX_TABLE_ROWS = 50;
 
 class LineChart {
-  constructor(canvas, wrap, colorVar, unit) {
+  constructor(canvas, wrap, colorVar, unit, fixedRange = null) {
     this.canvas = canvas;
     this.wrap = wrap;
     this.colorVar = colorVar;
     this.unit = unit;
+    this.fixedRange = fixedRange;
     this.ctx = canvas.getContext('2d');
     this.vizRoot = document.querySelector('.viz-root');
     this.data = [];
@@ -90,15 +91,22 @@ class LineChart {
     const plotW = this.width - padLeft - padRight;
     const plotH = this.height - padTop - padBottom;
 
-    let min = Math.min(...this.data.map(d => d.v));
-    let max = Math.max(...this.data.map(d => d.v));
-    if (min === max) {
-      min -= 1;
-      max += 1;
+    let niceMin, niceMax;
+    if (this.fixedRange) {
+      niceMin = this.fixedRange.min;
+      niceMax = this.fixedRange.max;
+    } else {
+      let min = Math.min(...this.data.map(d => d.v));
+      let max = Math.max(...this.data.map(d => d.v));
+      if (min === max) {
+        min -= 1;
+        max += 1;
+      }
+      const step = this.niceStep(max - min);
+      niceMin = Math.floor(min / step) * step;
+      niceMax = Math.ceil(max / step) * step;
     }
-    const step = this.niceStep(max - min);
-    const niceMin = Math.floor(min / step) * step;
-    const niceMax = Math.ceil(max / step) * step;
+    const step = this.niceStep(niceMax - niceMin);
 
     const xForIndex = i =>
       padLeft + (this.data.length === 1 ? 0 : (i / (this.data.length - 1)) * plotW);
@@ -210,6 +218,9 @@ const led1Button = document.getElementById('led1-toggle');
 const led1ToggleLabel = document.getElementById('led1-toggle-label');
 const led2Button = document.getElementById('led2-toggle');
 const led2ToggleLabel = document.getElementById('led2-toggle-label');
+const rawChartsButton = document.getElementById('raw-charts-toggle');
+const rawChartsToggleLabel = document.getElementById('raw-charts-toggle-label');
+const vizRoot = document.querySelector('.viz-root');
 
 // Each sensor keeps its own color across its raw and calibrated chart.
 const charts = {
@@ -223,7 +234,8 @@ const charts = {
     document.getElementById('voltage-cal-chart'),
     document.getElementById('voltage-cal-wrap'),
     '--series-voltage',
-    'V'
+    'V',
+    { min: 0, max: 300 }
   ),
   current1Raw: new LineChart(
     document.getElementById('current1-raw-chart'),
@@ -235,7 +247,8 @@ const charts = {
     document.getElementById('current1-cal-chart'),
     document.getElementById('current1-cal-wrap'),
     '--series-current1',
-    'A'
+    'A',
+    { min: 0, max: 5 }
   ),
   current2Raw: new LineChart(
     document.getElementById('current2-raw-chart'),
@@ -247,7 +260,8 @@ const charts = {
     document.getElementById('current2-cal-chart'),
     document.getElementById('current2-cal-wrap'),
     '--series-current2',
-    'A'
+    'A',
+    { min: 0, max: 5 }
   ),
 };
 
@@ -280,6 +294,17 @@ function toggleLed2() {
 
 led1Button.addEventListener('click', toggleLed1);
 led2Button.addEventListener('click', toggleLed2);
+
+function toggleRawCharts() {
+  const shown = rawChartsButton.getAttribute('aria-pressed') === 'true';
+  const nextShown = !shown;
+  rawChartsButton.setAttribute('aria-pressed', String(nextShown));
+  rawChartsToggleLabel.textContent = nextShown ? 'Shown' : 'Hidden';
+  vizRoot.classList.toggle('hide-raw-charts', !nextShown);
+  [charts.voltageRaw, charts.current1Raw, charts.current2Raw].forEach(c => c.resize());
+}
+
+rawChartsButton.addEventListener('click', toggleRawCharts);
 
 function addTableRow(reading) {
   const row = document.createElement('tr');
