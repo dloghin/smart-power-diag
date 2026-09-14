@@ -8,6 +8,6 @@ For each of the 3 sensors the UI shows two charts:
 
 Current 1 is wired to A4, Current 2 to A3. Both channels are calibrated independently since the two sensor boards may not have identical scaling.
 
-The UI also has an On/Off button that drives an external LED on pin 3 (via `Bridge.call("set_led", ...)` from Python to the sketch).
+The UI also has two Plug On/Off buttons, each driving an external LED + relay pair (pins 2 and 3) via `Bridge.call("set_plug1"/"set_plug2", ...)` from Python to the sketch. Both plugs default to Off on start.
 
 

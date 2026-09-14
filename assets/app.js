@@ -241,10 +241,10 @@ const frequencyValueEl = document.getElementById('frequency-value');
 const power1ValueEl = document.getElementById('power1-value');
 const power2ValueEl = document.getElementById('power2-value');
 const tableBody = document.getElementById('data-table-body');
-const led1Button = document.getElementById('led1-toggle');
-const led1ToggleLabel = document.getElementById('led1-toggle-label');
-const led2Button = document.getElementById('led2-toggle');
-const led2ToggleLabel = document.getElementById('led2-toggle-label');
+const plug1Button = document.getElementById('plug1-toggle');
+const plug1ToggleLabel = document.getElementById('plug1-toggle-label');
+const plug2Button = document.getElementById('plug2-toggle');
+const plug2ToggleLabel = document.getElementById('plug2-toggle-label');
 const rawChartsButton = document.getElementById('raw-charts-toggle');
 const rawChartsToggleLabel = document.getElementById('raw-charts-toggle-label');
 const vizRoot = document.querySelector('.viz-root');
@@ -297,30 +297,30 @@ function setStatus(online) {
   statusEl.className = `status ${online ? 'status-online' : 'status-offline'}`;
 }
 
-function applyLed1State(state) {
+function applyPlug1State(state) {
   const on = !!(state && state.on);
-  led1Button.setAttribute('aria-pressed', String(on));
-  led1ToggleLabel.textContent = on ? 'On' : 'Off';
+  plug1Button.setAttribute('aria-pressed', String(on));
+  plug1ToggleLabel.textContent = on ? 'On' : 'Off';
 }
 
-function applyLed2State(state) {
+function applyPlug2State(state) {
   const on = !!(state && state.on);
-  led2Button.setAttribute('aria-pressed', String(on));
-  led2ToggleLabel.textContent = on ? 'On' : 'Off';
+  plug2Button.setAttribute('aria-pressed', String(on));
+  plug2ToggleLabel.textContent = on ? 'On' : 'Off';
 }
 
-function toggleLed1() {
-  const nextOn = led1Button.getAttribute('aria-pressed') !== 'true';
-  ui.send_message('set_led1', { on: nextOn });
+function togglePlug1() {
+  const nextOn = plug1Button.getAttribute('aria-pressed') !== 'true';
+  ui.send_message('set_plug1', { on: nextOn });
 }
 
-function toggleLed2() {
-  const nextOn = led2Button.getAttribute('aria-pressed') !== 'true';
-  ui.send_message('set_led2', { on: nextOn });
+function togglePlug2() {
+  const nextOn = plug2Button.getAttribute('aria-pressed') !== 'true';
+  ui.send_message('set_plug2', { on: nextOn });
 }
 
-led1Button.addEventListener('click', toggleLed1);
-led2Button.addEventListener('click', toggleLed2);
+plug1Button.addEventListener('click', togglePlug1);
+plug2Button.addEventListener('click', togglePlug2);
 
 function toggleRawCharts() {
   const shown = rawChartsButton.getAttribute('aria-pressed') === 'true';
@@ -399,14 +399,14 @@ const ui = new WebUI({
 
 ui.on_connect(() => {
   setStatus(true);
-  // Pick up the LED's current state whenever the socket (re)connects.
-  ui.send_message('get_led1');
-  ui.send_message('get_led2');
+  // Pick up the plug's current state whenever the socket (re)connects.
+  ui.send_message('get_plug1');
+  ui.send_message('get_plug2');
 });
 ui.on_disconnect(() => setStatus(false));
 ui.on_message('reading', applyReading);
-ui.on_message('led1', applyLed1State);
-ui.on_message('led2', applyLed2State);
+ui.on_message('plug1', applyPlug1State);
+ui.on_message('plug2', applyPlug2State);
 
 // Backfill chart history from the last samples the app already collected.
 fetch('/samples')

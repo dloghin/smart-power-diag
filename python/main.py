@@ -35,41 +35,41 @@ def _get_samples():
 
 web_ui.expose_api("GET", "/samples", _get_samples)
 
-led1_state = {"on": True}
-led2_state = {"on": True}
+plug1_state = {"on": False}
+plug2_state = {"on": False}
 
 
-def _set_led1(client, data):
-    """WebSocket handler for the 'set_led1' message sent when the LED 1 button is clicked."""
-    led1_state["on"] = bool(data.get("on")) if isinstance(data, dict) else False
-    Bridge.call("set_led1", led1_state["on"])
-    web_ui.send_message("led1", led1_state)
+def _set_plug1(client, data):
+    """WebSocket handler for the 'set_plug1' message sent when the Plug 1 button is clicked."""
+    plug1_state["on"] = bool(data.get("on")) if isinstance(data, dict) else False
+    Bridge.call("set_plug1", plug1_state["on"])
+    web_ui.send_message("plug1", plug1_state)
 
 
-def _get_led1(client, data):
-    """WebSocket handler for the 'get_led1' message sent once the UI connects."""
-    web_ui.send_message("led1", led1_state, client)
+def _get_plug1(client, data):
+    """WebSocket handler for the 'get_plug1' message sent once the UI connects."""
+    web_ui.send_message("plug1", plug1_state, client)
 
-def _set_led2(client, data):
-    """WebSocket handler for the 'set_led2' message sent when the LED 2 button is clicked."""
-    led2_state["on"] = bool(data.get("on")) if isinstance(data, dict) else False
-    Bridge.call("set_led2", led2_state["on"])
-    web_ui.send_message("led2", led2_state)
-
-
-def _get_led2(client, data):
-    """WebSocket handler for the 'get_led2' message sent once the UI connects."""
-    web_ui.send_message("led2", led2_state, client)
+def _set_plug2(client, data):
+    """WebSocket handler for the 'set_plug2' message sent when the Plug 2 button is clicked."""
+    plug2_state["on"] = bool(data.get("on")) if isinstance(data, dict) else False
+    Bridge.call("set_plug2", plug2_state["on"])
+    web_ui.send_message("plug2", plug2_state)
 
 
-web_ui.on_message("set_led1", _set_led1)
-web_ui.on_message("get_led1", _get_led1)
+def _get_plug2(client, data):
+    """WebSocket handler for the 'get_plug2' message sent once the UI connects."""
+    web_ui.send_message("plug2", plug2_state, client)
 
-web_ui.on_message("set_led2", _set_led2)
-web_ui.on_message("get_led2", _get_led2)
+
+web_ui.on_message("set_plug1", _set_plug1)
+web_ui.on_message("get_plug1", _get_plug1)
+
+web_ui.on_message("set_plug2", _set_plug2)
+web_ui.on_message("get_plug2", _get_plug2)
 
 # Send the current reading immediately to any newly connected client
-# ('led' state is sent in response to the client's 'get_led' request instead).
+# ('plug' state is sent in response to the client's 'get_plug' request instead).
 web_ui.on_connect(lambda sid: web_ui.send_message("reading", latest))
 
 
