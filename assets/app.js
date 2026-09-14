@@ -149,6 +149,30 @@ class LineChart {
     });
     ctx.stroke();
 
+    // moving-average overlay: dashed, same color, reduced opacity
+    if (this.data.some(d => d.avg !== undefined)) {
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.strokeStyle = seriesColor;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      let started = false;
+      this.data.forEach((d, i) => {
+        if (d.avg === undefined) return;
+        const x = xForIndex(i);
+        const y = yForValue(d.avg);
+        if (!started) {
+          ctx.moveTo(x, y);
+          started = true;
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // end marker with a surface ring, and its direct value label
     const lastIdx = this.data.length - 1;
     const lastX = xForIndex(lastIdx);
@@ -213,6 +237,9 @@ const statusEl = document.getElementById('status');
 const voltageValueEl = document.getElementById('voltage-value');
 const current1ValueEl = document.getElementById('current1-value');
 const current2ValueEl = document.getElementById('current2-value');
+const frequencyValueEl = document.getElementById('frequency-value');
+const power1ValueEl = document.getElementById('power1-value');
+const power2ValueEl = document.getElementById('power2-value');
 const tableBody = document.getElementById('data-table-body');
 const led1Button = document.getElementById('led1-toggle');
 const led1ToggleLabel = document.getElementById('led1-toggle-label');
@@ -325,17 +352,41 @@ function addTableRow(reading) {
   }
 }
 
+const AVG_WINDOW = 10;
+let voltageAvgWindow = [];
+let current1AvgWindow = [];
+let current2AvgWindow = [];
+
+function pushAvgWindow(window, value) {
+  window.push(value);
+  if (window.length > AVG_WINDOW) window.shift();
+  return window.reduce((a, b) => a + b, 0) / window.length;
+}
+
+// Recomputes a full {t, v, avg} series from historical samples for chart backfill.
+function withMovingAverage(list, key) {
+  const window = [];
+  return list.map(s => ({ t: s.t, v: s[key], avg: pushAvgWindow(window, s[key]) }));
+}
+
 function applyReading(reading) {
   voltageValueEl.textContent = reading.voltage_cal.toFixed(1);
   current1ValueEl.textContent = reading.current1_cal.toFixed(2);
   current2ValueEl.textContent = reading.current2_cal.toFixed(2);
+  frequencyValueEl.textContent = reading.frequency.toFixed(2);
+  power1ValueEl.textContent = reading.power1.toFixed(1);
+  power2ValueEl.textContent = reading.power2.toFixed(1);
+
+  const voltageAvg = pushAvgWindow(voltageAvgWindow, reading.voltage_cal);
+  const current1Avg = pushAvgWindow(current1AvgWindow, reading.current1_cal);
+  const current2Avg = pushAvgWindow(current2AvgWindow, reading.current2_cal);
 
   charts.voltageRaw.push({ t: reading.t, v: reading.voltage_raw });
-  charts.voltageCal.push({ t: reading.t, v: reading.voltage_cal });
+  charts.voltageCal.push({ t: reading.t, v: reading.voltage_cal, avg: voltageAvg });
   charts.current1Raw.push({ t: reading.t, v: reading.current1_raw });
-  charts.current1Cal.push({ t: reading.t, v: reading.current1_cal });
+  charts.current1Cal.push({ t: reading.t, v: reading.current1_cal, avg: current1Avg });
   charts.current2Raw.push({ t: reading.t, v: reading.current2_raw });
-  charts.current2Cal.push({ t: reading.t, v: reading.current2_cal });
+  charts.current2Cal.push({ t: reading.t, v: reading.current2_cal, avg: current2Avg });
 
   addTableRow(reading);
 }
@@ -363,11 +414,17 @@ fetch('/samples')
   .then(list => {
     if (!Array.isArray(list)) return;
     charts.voltageRaw.setData(list.map(s => ({ t: s.t, v: s.voltage_raw })));
-    charts.voltageCal.setData(list.map(s => ({ t: s.t, v: s.voltage_cal })));
+    charts.voltageCal.setData(withMovingAverage(list, 'voltage_cal'));
     charts.current1Raw.setData(list.map(s => ({ t: s.t, v: s.current1_raw })));
-    charts.current1Cal.setData(list.map(s => ({ t: s.t, v: s.current1_cal })));
+    charts.current1Cal.setData(withMovingAverage(list, 'current1_cal'));
     charts.current2Raw.setData(list.map(s => ({ t: s.t, v: s.current2_raw })));
-    charts.current2Cal.setData(list.map(s => ({ t: s.t, v: s.current2_cal })));
+    charts.current2Cal.setData(withMovingAverage(list, 'current2_cal'));
+
+    // keep the live rolling windows continuous with the backfilled history
+    voltageAvgWindow = list.slice(-AVG_WINDOW).map(s => s.voltage_cal);
+    current1AvgWindow = list.slice(-AVG_WINDOW).map(s => s.current1_cal);
+    current2AvgWindow = list.slice(-AVG_WINDOW).map(s => s.current2_cal);
+
     list.slice(-MAX_TABLE_ROWS).forEach(addTableRow);
   })
   .catch(() => {});

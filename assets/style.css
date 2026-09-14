@@ -254,6 +254,11 @@ body {
   margin-bottom: 8px;
 }
 
+.chart-title-hint {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
 .chart-wrap {
   position: relative;
   width: 100%;

@@ -40,9 +40,30 @@ SPDX-License-Identifier: MPL-2.0
         </div>
       </section>
 
+      <section class="stats" aria-label="Frequency and power">
+        <div class="stat-tile">
+          <div class="stat-label"><span class="legend-dot legend-voltage"></span>Frequency</div>
+          <div class="stat-value">
+            <span id="frequency-value">--</span><span class="stat-unit">Hz</span>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label"><span class="legend-dot legend-current1"></span>Power 1</div>
+          <div class="stat-value">
+            <span id="power1-value">--</span><span class="stat-unit">W</span>
+          </div>
+        </div>
+        <div class="stat-tile">
+          <div class="stat-label"><span class="legend-dot legend-current2"></span>Power 2</div>
+          <div class="stat-value">
+            <span id="power2-value">--</span><span class="stat-unit">W</span>
+          </div>
+        </div>
+      </section>
+
       <section class="controls" aria-label="LED 1 control">
         <div class="control-tile">
-          <div class="control-label">Plug 1</div>
+          <div class="control-label">LED · Pin 2</div>
           <button id="led1-toggle" class="led-button" type="button" aria-pressed="false">
             <span class="led-dot"></span>
             <span id="led1-toggle-label">Off</span>
@@ -52,7 +73,7 @@ SPDX-License-Identifier: MPL-2.0
 
       <section class="controls" aria-label="LED 2 control">
         <div class="control-tile">
-          <div class="control-label">Plug 2</div>
+          <div class="control-label">LED · Pin 3</div>
           <button id="led2-toggle" class="led-button" type="button" aria-pressed="false">
             <span class="led-dot"></span>
             <span id="led2-toggle-label">Off</span>
@@ -79,7 +100,7 @@ SPDX-License-Identifier: MPL-2.0
             </div>
           </div>
           <div class="chart-card">
-            <div class="chart-title">Calibrated (V)</div>
+            <div class="chart-title">Calibrated (V) <span class="chart-title-hint">· dashed = 10-sample avg</span></div>
             <div class="chart-wrap" id="voltage-cal-wrap">
               <canvas id="voltage-cal-chart"></canvas>
             </div>
@@ -97,7 +118,7 @@ SPDX-License-Identifier: MPL-2.0
             </div>
           </div>
           <div class="chart-card">
-            <div class="chart-title">Calibrated (A)</div>
+            <div class="chart-title">Calibrated (A) <span class="chart-title-hint">· dashed = 10-sample avg</span></div>
             <div class="chart-wrap" id="current1-cal-wrap">
               <canvas id="current1-cal-chart"></canvas>
             </div>
@@ -115,7 +136,7 @@ SPDX-License-Identifier: MPL-2.0
             </div>
           </div>
           <div class="chart-card">
-            <div class="chart-title">Calibrated (A)</div>
+            <div class="chart-title">Calibrated (A) <span class="chart-title-hint">· dashed = 10-sample avg</span></div>
             <div class="chart-wrap" id="current2-cal-wrap">
               <canvas id="current2-cal-chart"></canvas>
             </div>

@@ -22,6 +22,9 @@ latest = {
     "current1_cal": 0.0,
     "current2_raw": 0.0,
     "current2_cal": 0.0,
+    "frequency": 0.0,
+    "power1": 0.0,
+    "power2": 0.0,
 }
 
 
@@ -77,6 +80,9 @@ def sensor_reading(
     current1_cal: float,
     current2_raw: float,
     current2_cal: float,
+    frequency: float,
+    power1: float,
+    power2: float,
 ):
     """Bridge handler: called from the sketch via Bridge.notify("sensor_reading", ...)."""
     global latest
@@ -88,6 +94,9 @@ def sensor_reading(
         "current1_cal": float(current1_cal),
         "current2_raw": float(current2_raw),
         "current2_cal": float(current2_cal),
+        "frequency": float(frequency),
+        "power1": float(power1),
+        "power2": float(power2),
     }
     samples.append(latest)
     try:
