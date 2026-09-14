@@ -147,6 +147,76 @@ body {
   margin-left: 4px;
 }
 
+.detections {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.detect-tile {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.detect-name {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.detect-status {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  min-height: 1.3em;
+}
+
+.confidence {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.confidence[hidden] {
+  display: none;
+}
+
+.confidence-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gridline);
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+
+.detect-tile--plug1 .confidence-fill {
+  background: var(--series-current1);
+}
+
+.detect-tile--plug2 .confidence-fill {
+  background: var(--series-current2);
+}
+
+.detect-details {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .controls {
   margin-bottom: 20px;
 }
@@ -227,7 +297,8 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .stats {
+  .stats,
+  .detections {
     grid-template-columns: 1fr;
   }
 }

@@ -352,6 +352,82 @@ function addTableRow(reading) {
   }
 }
 
+const APPLIANCE_NAMES = {
+  kettle: 'Kettle',
+  microwave: 'Microwave',
+  fridge: 'Fridge',
+  dishwasher: 'Dishwasher',
+  washingmachine: 'Washing machine',
+  unknown: 'Unknown appliance',
+};
+
+function plugElements(key) {
+  return {
+    name: document.getElementById(`${key}-name`),
+    status: document.getElementById(`${key}-status`),
+    confidence: document.getElementById(`${key}-confidence`),
+    confidenceFill: document.getElementById(`${key}-confidence-fill`),
+    confidenceLabel: document.getElementById(`${key}-confidence-label`),
+    details: document.getElementById(`${key}-details`),
+  };
+}
+
+const plugs = { plug1: plugElements('plug1'), plug2: plugElements('plug2') };
+
+function formatDuration(seconds) {
+  if (seconds < 60) return `${Math.floor(seconds)}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ${Math.floor(seconds % 60)}s`;
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+}
+
+// Shows one plug's detection as sent by python/detector.py (null until the first reading).
+function applyPlugDetection(els, d) {
+  if (!d) {
+    els.name.textContent = 'Waiting for data…';
+    els.status.textContent = '';
+    els.confidence.hidden = true;
+    els.details.textContent = '';
+    return;
+  }
+
+  let name;
+  let status;
+  if (d.state === 'running') {
+    name = d.appliance ? APPLIANCE_NAMES[d.appliance] : 'Identifying…';
+    status = `Running · ${formatDuration(d.state_s)}`;
+  } else if (d.appliance) {
+    // Not drawing power, but recently seen: e.g. a fridge between compressor cycles.
+    const off = d.appliance === 'fridge' ? 'Compressor off' : 'Off';
+    name = APPLIANCE_NAMES[d.appliance];
+    status = `${off} · last active ${formatDuration(d.last_active_s)} ago`;
+  } else if (d.state === 'standby') {
+    name = 'Standby draw';
+    status = 'Something is plugged in but not running';
+  } else {
+    name = 'Nothing plugged in';
+    status = 'No power draw (or the appliance is switched off)';
+  }
+  els.name.textContent = name;
+  els.status.textContent = status;
+
+  const identified = d.appliance && d.appliance !== 'unknown';
+  els.confidence.hidden = !identified;
+  if (identified) {
+    const percent = Math.round(d.confidence * 100);
+    els.confidenceFill.style.width = `${percent}%`;
+    els.confidenceLabel.textContent = d.confidence < 0.6 ? `Low confidence · ${percent}%` : `${percent}% confidence`;
+  }
+
+  const pf = d.power_factor === null ? '–' : d.power_factor.toFixed(2);
+  els.details.textContent = `${d.power.toFixed(1)} W · ${d.current.toFixed(2)} A · PF ${pf}`;
+}
+
+function applyDetections(detections) {
+  applyPlugDetection(plugs.plug1, detections.plug1);
+  applyPlugDetection(plugs.plug2, detections.plug2);
+}
+
 const AVG_WINDOW = 10;
 let voltageAvgWindow = [];
 let current1AvgWindow = [];
@@ -405,6 +481,7 @@ ui.on_connect(() => {
 });
 ui.on_disconnect(() => setStatus(false));
 ui.on_message('reading', applyReading);
+ui.on_message('detection', applyDetections);
 ui.on_message('plug1', applyPlug1State);
 ui.on_message('plug2', applyPlug2State);
 

@@ -7,11 +7,17 @@ from arduino.app_bricks.web_ui import WebUI
 from collections import deque
 import time
 
+from detector import PlugDetector
+
 # Keep enough history for the chart (~100s at a 500ms refresh rate).
 SAMPLES_MAX = 200
 
 logger = Logger("ac-power-monitor")
 web_ui = WebUI()
+
+# One appliance detector per plug: plug 1 is measured by Current 1 (A4), plug 2 by Current 2 (A3).
+plug_detectors = {"plug1": PlugDetector(), "plug2": PlugDetector()}
+detections = {"plug1": None, "plug2": None}
 
 samples = deque(maxlen=SAMPLES_MAX)
 latest = {
@@ -68,9 +74,14 @@ web_ui.on_message("get_plug1", _get_plug1)
 web_ui.on_message("set_plug2", _set_plug2)
 web_ui.on_message("get_plug2", _get_plug2)
 
-# Send the current reading immediately to any newly connected client
-# ('plug' state is sent in response to the client's 'get_plug' request instead).
-web_ui.on_connect(lambda sid: web_ui.send_message("reading", latest))
+def _on_connect(sid):
+    # Send the current reading and detections immediately to any newly connected client
+    # ('led' state is sent in response to the client's 'get_led' request instead).
+    web_ui.send_message("reading", latest)
+    web_ui.send_message("detection", detections)
+
+
+web_ui.on_connect(_on_connect)
 
 
 def sensor_reading(
@@ -85,7 +96,7 @@ def sensor_reading(
     power2: float,
 ):
     """Bridge handler: called from the sketch via Bridge.notify("sensor_reading", ...)."""
-    global latest
+    global latest, detections
     latest = {
         "t": time.time(),
         "voltage_raw": float(voltage_raw),
@@ -103,6 +114,19 @@ def sensor_reading(
         web_ui.send_message("reading", latest)
     except Exception as e:
         logger.debug(f"Failed to broadcast 'reading' message: {e}")
+
+    try:
+        detections = {
+            "plug1": plug_detectors["plug1"].update(
+                latest["t"], latest["voltage_cal"], latest["current1_cal"], latest["power1"]
+            ),
+            "plug2": plug_detectors["plug2"].update(
+                latest["t"], latest["voltage_cal"], latest["current2_cal"], latest["power2"]
+            ),
+        }
+        web_ui.send_message("detection", detections)
+    except Exception as e:
+        logger.warning(f"Appliance detection failed: {e}")
 
 
 Bridge.provide("sensor_reading", sensor_reading)

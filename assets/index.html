@@ -61,6 +61,29 @@ SPDX-License-Identifier: MPL-2.0
         </div>
       </section>
 
+      <section class="detections" aria-label="Detected appliances">
+        <div class="detect-tile detect-tile--plug1">
+          <div class="stat-label"><span class="legend-dot legend-current1"></span>Plug 1 · A4</div>
+          <div id="plug1-name" class="detect-name">Waiting for data…</div>
+          <div id="plug1-status" class="detect-status"></div>
+          <div id="plug1-confidence" class="confidence" hidden>
+            <div class="confidence-track"><div id="plug1-confidence-fill" class="confidence-fill"></div></div>
+            <span id="plug1-confidence-label"></span>
+          </div>
+          <div id="plug1-details" class="detect-details"></div>
+        </div>
+        <div class="detect-tile detect-tile--plug2">
+          <div class="stat-label"><span class="legend-dot legend-current2"></span>Plug 2 · A3</div>
+          <div id="plug2-name" class="detect-name">Waiting for data…</div>
+          <div id="plug2-status" class="detect-status"></div>
+          <div id="plug2-confidence" class="confidence" hidden>
+            <div class="confidence-track"><div id="plug2-confidence-fill" class="confidence-fill"></div></div>
+            <span id="plug2-confidence-label"></span>
+          </div>
+          <div id="plug2-details" class="detect-details"></div>
+        </div>
+      </section>
+
       <section class="controls" aria-label="Plug 1 control">
         <div class="control-tile">
           <div class="control-label">Plug · Pin 2</div>
