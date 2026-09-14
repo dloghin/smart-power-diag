@@ -188,8 +188,8 @@ void loop() {
   // Real (active) power in Watts, converting the ADC-code product to real
   // volts*amps via the same per-channel calibration used for the RMS values.
   double instantScale = (VREF / ADC_MAX) * (VREF / ADC_MAX);
-  power1 = (sViCurrent1 / (double)SAMPLE_COUNT) * instantScale * VOLTAGE_CALIBRATION * CURRENT1_CALIBRATION;
-  power2 = (sViCurrent2 / (double)SAMPLE_COUNT) * instantScale * VOLTAGE_CALIBRATION * CURRENT2_CALIBRATION;
+  power1 = (abs(sViCurrent1) / (double)SAMPLE_COUNT) * instantScale * VOLTAGE_CALIBRATION * CURRENT1_CALIBRATION;
+  power2 = (abs(sViCurrent2) / (double)SAMPLE_COUNT) * instantScale * VOLTAGE_CALIBRATION * CURRENT2_CALIBRATION;
 
   // send and log
   unsigned long nowMillis = millis();
