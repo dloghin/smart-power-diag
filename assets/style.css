@@ -237,7 +237,7 @@ body {
   color: var(--text-secondary);
 }
 
-.led-button {
+.toggle-button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -252,11 +252,11 @@ body {
   cursor: pointer;
 }
 
-.led-button:hover {
+.toggle-button:hover {
   border-color: var(--baseline);
 }
 
-.led-dot {
+.toggle-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
@@ -264,11 +264,11 @@ body {
   flex: none;
 }
 
-.led-button[aria-pressed='true'] .led-dot {
+.toggle-button[aria-pressed='true'] .toggle-dot {
   background: var(--status-good);
 }
 
-.led-button[aria-pressed='true'] {
+.toggle-button[aria-pressed='true'] {
   border-color: var(--status-good);
 }
 

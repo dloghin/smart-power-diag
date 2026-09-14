@@ -76,7 +76,7 @@ web_ui.on_message("get_plug2", _get_plug2)
 
 def _on_connect(sid):
     # Send the current reading and detections immediately to any newly connected client
-    # ('led' state is sent in response to the client's 'get_led' request instead).
+    # (plug state is sent in response to the client's 'get_plug1'/'get_plug2' requests instead).
     web_ui.send_message("reading", latest)
     web_ui.send_message("detection", detections)
 
