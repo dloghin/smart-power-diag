@@ -1,4 +1,4 @@
-# ⚡ AC Power Monitor
+# ⚡ Smart AC Power Monitor and Diagnosis
 
 Reads an LM358 v3 AC voltage sensor (A0) and two ACS712T AC current sensors (A4, A3) via the ADC and plots RMS values live in a web UI, refreshed every 500ms.
 
